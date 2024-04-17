@@ -1,18 +1,5 @@
 import numpy as np
 
-"""
-
-텍스트에 대해 음운 변동 적용.
-*정확하지 않음 주의..
-
-ex) text ="국화"
-print(compoes_tokens(decompose_tokens(text)))
-
-result...   ['구', '콰']
-
-"""
-
-
 def isKoUni(char):
     return ord('가')<=ord(char)<=ord('힣')
 
@@ -318,3 +305,5 @@ def compoes_tokens(decomposed):
         if(tokens != decomposed_str_list[-1]):
             result.extend(' ')
     return result
+
+
