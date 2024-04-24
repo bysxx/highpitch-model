@@ -306,4 +306,3 @@ def compoes_tokens(decomposed):
             result.extend(' ')
     return result
 
-
