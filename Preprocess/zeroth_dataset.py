@@ -1,8 +1,8 @@
 import os
-import librosa
-from pydub import AudioSegment
-from pydub.effects import normalize
-from pydub.silence import detect_nonsilent
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+from utils.Audio import remove_Silence , GetAudio
 
 """
 Zeroth Data set[https://www.openslr.org/40/] 폴더구조를 다음과 같의 정의합니다.
@@ -28,35 +28,32 @@ def CheckFoldExist(foldpath):
 def GenFolder(foldpath):
     if(not CheckFoldExist(foldpath)):
         os.makedirs(foldpath)
+
 def make_audio_file(source_path, destination_path):
     try:
-        audio = AudioSegment.from_file(source_path).set_frame_rate(16000).set_sample_width(2).set_channels(1)
-        result = detect_nonsilent(audio,min_silence_len=200,silence_thresh=-60)
-        newaudio = AudioSegment.empty()
-        for index in result:
-            newaudio += audio[index[0]:index[1]]
-        newaudio = normalize(newaudio)
-        newaudio.export(f"{destination_path}.wav")
+        audio = GetAudio(source_path)
+        audio = remove_Silence(audio)
+        audio.export(f"{destination_path}.wav")
     except Exception as e:
         print("오류 발생:", e)
 
-base = "zeroth_korean"
-newbase = os.path.join(os.getcwd(),"zeroth_korean_dataset")
-GenFolder(newbase)
-GenFolder(os.path.join(newbase,"train"))
-GenFolder(os.path.join(newbase,"test"))
-
-for usage in  [os.path.join('test_data_01',"003"),os.path.join('train_data_01',"003")]:
-    path = os.path.join(os.getcwd(),base,usage)
-    newpath = 'train'
-    if(usage == os.path.join("test_data_01","003")):
-        newpath ='test'
-    with open(os.path.join(newbase,newpath,newpath+'.txt'), "w",encoding="utf-8") as label:
-        for folder in os.listdir(os.path.join(os.getcwd(),base,usage)):
-            for file in os.listdir(os.path.join(path,folder)):
-                filename, file_extension = os.path.splitext(file)
-                if(file_extension == '.txt'):
-                    with open(os.path.join(path,folder,file), "r",encoding="utf-8") as existing_file:
-                        label.write(existing_file.read())
-                else:
-                    make_audio_file(os.path.join(path,folder,file),os.path.join(newbase,newpath,filename))
+if __name__ == "__main__":
+    base = "zeroth_korean"
+    newbase = os.path.join(current_dir,"zeroth_korean_dataset")
+    GenFolder(newbase)
+    GenFolder(os.path.join(newbase,"train"))
+    GenFolder(os.path.join(newbase,"test"))
+    for usage in  [os.path.join('test_data_01',"003"),os.path.join('train_data_01',"003")]:
+        path = os.path.join(current_dir,base,usage)
+        newpath = 'train'
+        if(usage == os.path.join("test_data_01","003")):
+            newpath ='test'
+        with open(os.path.join(newbase,newpath,newpath+'.txt'), "w",encoding="utf-8") as label:
+            for folder in os.listdir(os.path.join(current_dir,base,usage)):
+                for file in os.listdir(os.path.join(path,folder)):
+                    filename, file_extension = os.path.splitext(file)
+                    if(file_extension == '.txt'):
+                        with open(os.path.join(path,folder,file), "r",encoding="utf-8") as existing_file:
+                            label.write(existing_file.read())
+                    else:
+                        make_audio_file(os.path.join(path,folder,file),os.path.join(newbase,newpath,filename))
