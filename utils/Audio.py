@@ -4,6 +4,7 @@ from pydub.effects import normalize
 from pydub.silence import detect_nonsilent
 import numpy as np
 from IPython.display import display
+from IPython.display import Audio
 
 def GetAudio(file , sr = 16000):
     return normalize(AudioSegment.from_file(file).set_frame_rate(sr))

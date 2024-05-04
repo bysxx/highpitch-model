@@ -232,22 +232,26 @@ def 유음화(char1,char2):
     return [char1,char2]
 
 
-
 def decompose_tokens(text):
-    #text = text.replace(" ", "")
     result = []
-    for c in text:
+    phoneme_index = []
+
+    for i, c in enumerate(text):
         if(isKoUni(c)):
             initial = Decompose_initialConstant(c)
             vowel = Decompose_vowel(c)
             final = Decompose_finalConstant(c)
             if(initial != ""):
+                phoneme_index.append(i)
                 result.extend(initial)
             if(vowel != ""):
+                phoneme_index.append(i)
                 result.extend(vowel)
             if(final != ""):
+                phoneme_index.append(i)
                 result.extend(final)
         elif(c == ' '):
+            phoneme_index.append(i)
             result.extend(c)
 
     length = len(result)
@@ -265,9 +269,12 @@ def decompose_tokens(text):
             result[i], result[i+1], result[i+2] = 구개음화(result[i],result[i+1],result[i+2])
         if(i+1<length):
             result[i], result[i+1]= 된소리되기(result[i],result[i+1])
+
     while '' in result:
-        result.remove('')
-    return result
+        index = result.index('')
+        del result[index]
+        del phoneme_index[index]
+    return [result , phoneme_index]
 
 
 def GetUniChar(init,vowel,final = None):

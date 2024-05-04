@@ -1,3 +1,8 @@
+import sys,os
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+from utils.Audio import PrintAudioInfo, GetAudio, remove_Silence
+
 from utils.Tokenize_Kor import isVowel
 import numpy as np
 
@@ -39,10 +44,9 @@ def findpath(mat,i,j):
     left = i>1
     up = j >1
     diag = left and up
-    if not (left and up):
-        return [[i,j]]
+    if not (left or  up):
+        return [[i,j]] , 0
     else:
-        path = [[i,j]]
         candi = []
         if(left):
             candi.append(mat[i-1][j])
@@ -57,6 +61,8 @@ def findpath(mat,i,j):
         else:
             candi.append(np.inf)
         min_indices = np.where(candi == np.min(candi))[0]
+        candipath = [[],[],[]]
+        candi_pred = [np.inf,np.inf,np.inf]
         for index in min_indices:
             candi_row  = i 
             candi_col = j
@@ -67,18 +73,18 @@ def findpath(mat,i,j):
                 candi_col = j-1
             if(index==2):
                 candi_col = j-1
-            candipath = findpath(mat,candi_row,candi_col)
-            if(len(candipath)==0):
-                path = []
-            else:
-                path.extend(candipath)
-                break
-        return path
+            candipath[index] , candi_pred[index] = findpath(mat,candi_row,candi_col)
+
+        min_indices = np.where(candi_pred == np.min(candi_pred))[0]
+        path = [[i,j]]
+        path.extend(candipath[min_indices[0]])
+        return path ,candi_pred[min_indices[0]]
 
 def infer(s1, s2):
     mat = levenshtein_distance_Marix(s1,s2)
     i,j = len(s1), len(s2) 
-    result =  findpath(mat,i,j)[::-1]
+    path , cost =  findpath(mat,i,j)
+    result = path[::-1]
     inferedresult = [[result[0][0],[result[0][1]]]]
     for i in range(1,len(result)):
         prev_index = result[i-1][0]-1
