@@ -235,7 +235,6 @@ def 유음화(char1,char2):
 def decompose_tokens(text):
     result = []
     phoneme_index = []
-
     for i, c in enumerate(text):
         if(isKoUni(c)):
             initial = Decompose_initialConstant(c)

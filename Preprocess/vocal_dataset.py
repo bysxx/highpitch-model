@@ -87,6 +87,9 @@ if __name__ == "__main__":
     GenFolder(os.path.join(new_data_path,"test","audiofiles"))
     ## Trainset
     with open(os.path.join(current_dir,"vocal_dataset","train","train.txt"), 'w', encoding='UTF8') as result_file:
-        proc_in_subfolders(os.path.join(current_dir,'children_dataset',"1.Training","TL1"),"train",result_file)
+        proc_in_subfolders(os.path.join(current_dir,'dataset',"1.Training","TL1"),"train",result_file)
     with open(os.path.join(current_dir,"vocal_dataset","test","test.txt"), 'w', encoding='UTF8') as result_file:
-        proc_in_subfolders(os.path.join(current_dir,'children_dataset',"2.Validation","VL1"),"test",result_file)
+        proc_in_subfolders(os.path.join(current_dir,'dataset',"2.Validation","VL1"),"test",result_file)
+
+
+        
