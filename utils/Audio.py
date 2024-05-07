@@ -4,9 +4,10 @@ from pydub.effects import normalize
 from pydub.silence import detect_nonsilent
 import numpy as np
 from IPython.display import display
+from IPython.display import Audio
 
 def GetAudio(file , sr = 16000):
-    return normalize(AudioSegment.from_file(file).set_frame_rate(sr))
+    return normalize(AudioSegment.from_file(file).set_channels(1).set_frame_rate(sr))
 
 def remove_Silence (audio,min_silence_len = 0.2):
     result = detect_nonsilent(audio,min_silence_len=int(min_silence_len*1000),silence_thresh=-60)
