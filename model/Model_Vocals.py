@@ -13,19 +13,21 @@ from transformers import Wav2Vec2Config
 from collections import Counter
 import time
 
-global Vocals_model
-global Vocals_processor
+
+Vocals_model = None
+Vocals_processor = None
 
 def LoadModel():
     global Vocals_model
     global Vocals_processor
     print("LoadModel...")
-    model_config = Wav2Vec2Config.from_json_file(os.path.join(current_dir,'Model','model_config.json'))
-    Vocals_model = Wav2Vec2ForCTC(model_config)
-    model_dict = torch.load(os.path.join(current_dir,'Model','model_state.pt'))
-    Vocals_model.load_state_dict(model_dict)
-    Vocals_model.eval()
-    Vocals_processor = Wav2Vec2Processor.from_pretrained(os.path.join(current_dir,'Model','processor_config'))
+    if(Vocals_model is None):
+        model_config = Wav2Vec2Config.from_json_file(os.path.join(current_dir,'Model','model_config.json'))
+        Vocals_model = Wav2Vec2ForCTC(model_config)
+        model_dict = torch.load(os.path.join(current_dir,'Model','model_state.pt'))
+        Vocals_model.load_state_dict(model_dict)
+        Vocals_model.eval()
+        Vocals_processor = Wav2Vec2Processor.from_pretrained(os.path.join(current_dir,'Model','processor_config'))
     print("LoadModel...DONE")
 
 def worker(args):
@@ -46,15 +48,19 @@ def worker(args):
 
 class Model_Vocals:
     def __init__(self):
-        self.poolNum = 3
+        self.poolNum = 1
         self.pool = None
+    def initialize(self , num):
         LoadModel()
-        if self.pool is None:
-            self.pool = mp.Pool(processes=self.poolNum, initializer=LoadModel)
+        if self.pool is not None:
+            self.close_pool()
+        self.poolNum = num
+        self.pool = mp.Pool(processes=self.poolNum, initializer=LoadModel)
     def SaveModel(self):
-        model_id = 'hongseongpil/wav2vec2-vocals'
-        Vocals_model = Wav2Vec2ForCTC.from_pretrained(model_id, output_attentions=True)
-        processor = Wav2Vec2Processor.from_pretrained(model_id)
+        model_id = 'hongseongpil/wav2vec2-Vocals-Kor'
+        revision = '9804430a50f2feab572a90abbb6c584a7f212118'
+        Vocals_model = Wav2Vec2ForCTC.from_pretrained(model_id,revision = revision, output_attentions=True)
+        processor = Wav2Vec2Processor.from_pretrained(model_id,revision = revision)
         processor.save_pretrained(os.path.join(current_dir,'Model','processor_config'))
         torch.save(Vocals_model.state_dict(), os.path.join(current_dir,'Model','model_state.pt'))
         Vocals_model.config.to_json_file(os.path.join(current_dir,'Model','model_config.json'))
@@ -70,71 +76,48 @@ class Model_Vocals:
         start_times = [i * interval for i in range(self.poolNum)]
         end_times = [start + interval for start in start_times]
         audio_segments = []
+
         for start, end in zip(start_times, end_times):
             segment = audio[int(start*1000):int(end*1000)]
             audio_segments.append(segment)
-    
         predtext = ""
         charoffset = []
-        endoffset = 0
-        for output in self.pool.map(worker, [(i, audio_segments[i]) for i in range(self.poolNum)]):
+        time_offset = Vocals_model.config.inputs_to_logits_ratio / Vocals_processor.feature_extractor.sampling_rate
+        for i , output in enumerate(self.pool.map(worker, [(i, audio_segments[i]) for i in range(self.poolNum)])):
             predtext += output['text'].replace(' ','')
-            newendoffset = endoffset + output['char_offsets'][-1]["end_offset"]
-            for i in range(len(output['char_offsets'])):
-                output['char_offsets'][i]["start_offset"] += endoffset 
-                output['char_offsets'][i]["end_offset"] += endoffset 
+            for j in range(len(output['char_offsets'])):
+                start_offset = output['char_offsets'][j]["start_offset"]
+                output['char_offsets'][j]["start_offset"] = round (start_offset* time_offset, 2 ) + start_times[i] 
+                end_offset = output['char_offsets'][j]["end_offset"]
+                output['char_offsets'][j]["end_offset"] = round (end_offset* time_offset, 2 ) + start_times[i]
             charoffset.extend(output['char_offsets'])
-            endoffset = newendoffset
-
         print("infer .. start")
-
         origintext = "".join(decomposed[0])
         count_dict = dict(Counter(decomposed[1]))
         count_list = [[num, count] for num, count in count_dict.items()]
         result = []
         phoneme_index = 0
         infered = infer(origintext,predtext)
-        time_offset = Vocals_model.config.inputs_to_logits_ratio / Vocals_processor.feature_extractor.sampling_rate
+
+        end_index = -1
         for i in count_list:
             start_index = infered[phoneme_index][1][0]-1
+            start_offset = charoffset[start_index]["start_offset"]
+            if(end_index == start_index):
+                start_offset = charoffset[start_index]["end_offset"]
             end_index = infered[phoneme_index+i[1]-1][1][-1]-1
             phoneme_index += i[1]
             start_offset = charoffset[start_index]["start_offset"]
             end_offset = charoffset[end_index]["end_offset"]
-            result.append({'origin' : label[i[0]],'start':round (start_offset* time_offset, 2 ),'end' :round (end_offset* time_offset, 2 )})
-
+            result.append({'origin' : label[i[0]],'start':start_offset,'end' :end_offset})
         print("infer .. Done")
-        print(result)
+        for item in infered:
+            pred ="".join([predtext[j-1] for j in item[1]])
+            print("origintext:", origintext[item[0]-1],"predtext:",pred)
+        return result
 
     def close_pool(self):
         if self.pool is not None:
             self.pool.close()
             self.pool.join()
             self.pool = None
-
-if __name__ == '__main__':
-    audio_path = os.path.join(current_dir, "곰세마리.wav")
-    label = "곰 세마리가 한 집에 있어 아빠곰 엄마곰 애기곰 아빠곰은 뚱뚱해 엄마 곰은 날씬해 애기곰은 너무 귀여워 으쓱으쓱 잘한다."
-
-    start_time = time.time()
-    model = Model_Vocals()
-    execution_time = time.time() - start_time
-    print(f"Execution time: {execution_time:.5f} seconds")
-
-    time.sleep(10)
-
-    start_time = time.time()
-    model(audio_path, label)
-    execution_time = time.time() - start_time
-    print(f"Execution time: {execution_time:.5f} seconds")
-
-    start_time = time.time()
-    model(audio_path, label)
-    execution_time = time.time() - start_time
-    print(f"Execution time: {execution_time:.5f} seconds")
-
-    start_time = time.time()
-    model(audio_path, label)
-    execution_time = time.time() - start_time
-    print(f"Execution time: {execution_time:.5f} seconds")
-    model.close_pool()  
