@@ -10,16 +10,17 @@ import numpy as np
 def CalPenality(s1,s2 , i , j):
     c1 = s1[i]
     c2 = s2[j]
+    s2_len = len(s2)
     penalty = 1
     c1_vowel = isVowel(c1)
     c2_vowel = isVowel(c2)
     if(c1_vowel == c2_vowel):
         penalty = 0.5
-        ## 조음 위치가 비슷한 음소는 패널티를 적게 부여하자..
+        # 조음 위치가 비슷한 음소는 패널티를 적게 부여하자..
         # if((c1 =='ㅈ') and (c2 == 'ㅉ')):
         #     penalty = 0.3
     else:
-        if((c1 == 'ㅇ') or (c2=='ㅇ')):
+        if(c1_vowel and (c2=='ㅇ')):
             penalty = 0.2
     return penalty
 
@@ -61,7 +62,6 @@ def findpath(mat,i,j ,dp):
                 dp[candi_row][candi_col] = findpath(mat,candi_row,candi_col,dp)
             candipath.append(dp[candi_row][candi_col][0])
             candi_pred.append(dp[candi_row][candi_col][1])
-
         min_indices = np.where(candi_pred == np.min(candi_pred))[0]
         path = [[i,j]]
         path.extend(candipath[min_indices[0]])
@@ -99,3 +99,10 @@ def infer(s1, s2):
         else:
             inferedresult.append([result[i][0],[result[i][1]]])
     return inferedresult
+
+
+
+
+
+
+
