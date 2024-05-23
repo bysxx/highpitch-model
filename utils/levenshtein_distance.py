@@ -101,8 +101,3 @@ def infer(s1, s2):
     return inferedresult
 
 
-
-
-
-
-

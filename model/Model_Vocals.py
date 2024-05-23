@@ -11,8 +11,6 @@ import numpy as np
 import torch.multiprocessing as mp
 from transformers import Wav2Vec2Config
 from collections import Counter
-import time
-
 
 Vocals_model = None
 Vocals_processor = None
@@ -76,7 +74,6 @@ class Model_Vocals:
         start_times = [i * interval for i in range(self.poolNum)]
         end_times = [start + interval for start in start_times]
         audio_segments = []
-
         for start, end in zip(start_times, end_times):
             segment = audio[int(start*1000):int(end*1000)]
             audio_segments.append(segment)
@@ -95,29 +92,28 @@ class Model_Vocals:
         origintext = "".join(decomposed[0])
         count_dict = dict(Counter(decomposed[1]))
         count_list = [[num, count] for num, count in count_dict.items()]
+        infered = infer(origintext,predtext)
         result = []
         phoneme_index = 0
-        infered = infer(origintext,predtext)
-
         end_index = -1
         for i in count_list:
             start_index = infered[phoneme_index][1][0]-1
             start_offset = charoffset[start_index]["start_offset"]
-            if(end_index == start_index):
-                start_offset = charoffset[start_index]["end_offset"]
+            if result and (result[-1]["end"]>charoffset[start_index]["start_offset"]):
+                result[-1]["end"] = charoffset[start_index]["start_offset"]
             end_index = infered[phoneme_index+i[1]-1][1][-1]-1
             phoneme_index += i[1]
-            start_offset = charoffset[start_index]["start_offset"]
             end_offset = charoffset[end_index]["end_offset"]
-            result.append({'origin' : label[i[0]],'start':start_offset,'end' :end_offset})
+            result.append({'char' : label[i[0]],'start':start_offset,'end' :end_offset,'pitch':'c4'})
         print("infer .. Done")
         for item in infered:
             pred ="".join([predtext[j-1] for j in item[1]])
             print("origintext:", origintext[item[0]-1],"predtext:",pred)
-        return result
+        return result 
 
     def close_pool(self):
         if self.pool is not None:
             self.pool.close()
             self.pool.join()
             self.pool = None
+            

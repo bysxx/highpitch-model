@@ -3,7 +3,7 @@ __pycache__/
 */*/__pycache__/
 
 *.wav
-
+/Wav/
 
 Preprocess/dataset/
 model/Model/
