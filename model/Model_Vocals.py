@@ -11,6 +11,9 @@ import numpy as np
 import torch.multiprocessing as mp
 from transformers import Wav2Vec2Config
 from collections import Counter
+from model.crepe_pitch_model import check_pitch_and_return
+
+
 
 Vocals_model = None
 Vocals_processor = None
@@ -54,7 +57,7 @@ class Model_Vocals:
             self.close_pool()
         self.poolNum = num
         self.pool = mp.Pool(processes=self.poolNum, initializer=LoadModel)
-    def SaveModel(self):
+    def SaveModel(self ):
         model_id = 'hongseongpil/wav2vec2-Vocals-Kor'
         revision = '9804430a50f2feab572a90abbb6c584a7f212118'
         Vocals_model = Wav2Vec2ForCTC.from_pretrained(model_id,revision = revision, output_attentions=True)
@@ -64,7 +67,7 @@ class Model_Vocals:
         Vocals_model.config.to_json_file(os.path.join(current_dir,'Model','model_config.json'))
     
     def __call__(self, audio_path, label):
-        audio = GetAudio(audio_path)
+        audio = GetAudio(audio_path , 16000)
         decomposed = decompose_tokens(label)
         while ' ' in decomposed[0]:
             index = decomposed[0].index(' ')
@@ -104,7 +107,7 @@ class Model_Vocals:
             end_index = infered[phoneme_index+i[1]-1][1][-1]-1
             phoneme_index += i[1]
             end_offset = charoffset[end_index]["end_offset"]
-            result.append({'char' : label[i[0]],'start':start_offset,'end' :end_offset,'pitch':'c4'})
+            result.append({'char' : label[i[0]],'start':start_offset,'end' :end_offset,'pitch':check_pitch_and_return(audio[start_offset*1000:end_offset*1000])})
         print("infer .. Done")
         for item in infered:
             pred ="".join([predtext[j-1] for j in item[1]])
