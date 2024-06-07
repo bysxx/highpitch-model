@@ -15,6 +15,28 @@ def extract_pitch_crepe(wav_file, step_size=10, model_capacity='full'):
     :param model_capacity: CREPE 모델 용량 ('tiny', 'small', 'medium', 'large', 'full')
     :return: time, frequency, confidence
     """
-    y, sr = librosa.load(wav_file, sr=16000)
+    y, sr = librosa.load(wav_file, sr=16000)  # CREPE는 16kHz 샘플링을 사용
     time, frequency, confidence, activation = crepe.predict(y, sr, step_size=step_size, model_capacity=model_capacity)
     return time, frequency, confidence
+
+def check_pitch_and_return(wav_file, label):
+    """
+    :param wav_file: 분석할 WAV 파일 경로
+    :param label: 각 피치에 대한 추가 정보가 포함된 단일 라벨 값
+    :return: JSON 형식의 피치 추출 결과
+    """
+    time, frequency, confidence = extract_pitch_crepe(wav_file)
+    # 주파수를 MIDI 번호로 변환
+    midi_numbers = librosa.hz_to_midi(frequency).astype(int)
+    
+    result = []
+    for i, midi in enumerate(midi_numbers):
+        if midi in MIDI_TO_NOTE:
+            start_offset = time[i]
+            end_offset = time[i + 1] if i + 1 < len(time) else time[i] + (time[i] - time[i - 1])
+            result.append({
+                'char': label,
+                'pitch': MIDI_TO_NOTE[midi]
+            })
+    
+    return result
