@@ -34,9 +34,33 @@ if __name__ == '__main__':
     from pydub.silence import detect_silence
     from pydub import AudioSegment
     from utils.Audio import GetAudio
-    
+
     model = Model_Vocals()
     model.initialize(3)
+
+    name =os.path.join(current_dir,  'Wav','산중호걸_V')
+    label = """
+
+    산중호걸이라 하는
+    호랑님의 생일날이 되어
+    각색 짐승 공원에 모여
+    무도회가 열렸네
+
+    토끼는 춤추고
+    여우는 바이올린
+    찐짠 
+    찌가찌가 찐짠
+    찐짠찐짠하더라
+
+    그 중에 한 놈이
+    잘난 체하면서
+    까불 
+    까불까불 까불
+    까불까불하더라
+
+    """
+    label = label.replace('\n',' ')
+    result = MakeLyricInfo(name,label)
 
 
     name = os.path.join(current_dir, 'Wav','아기상어_V')
@@ -106,33 +130,6 @@ if __name__ == '__main__':
 
     label = label.replace('\n',' ')
     result = MakeLyricInfo(name,label)
-
-
-
-    name =os.path.join(current_dir,  'Wav','산중호걸_V')
-    label = """
-
-    산중호걸이라 하는
-    호랑님의 생일날이 되어
-    각색 짐승 공원에 모여
-    무도회가 열렸네
-
-    토끼는 춤추고
-    여우는 바이올린
-    찐짠 
-    찌가찌가 찐짠
-    찐짠찐짠하더라
-
-    그 중에 한 놈이
-    잘난 체하면서
-    까불 
-    까불까불 까불
-    까불까불하더라
-
-    """
-    label = label.replace('\n',' ')
-    result = MakeLyricInfo(name,label)
-
 
     name =os.path.join(current_dir,  'Wav','멋쟁이토마토_V')
     label = """
