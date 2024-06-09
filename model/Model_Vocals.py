@@ -107,7 +107,7 @@ class Model_Vocals:
             end_index = infered[phoneme_index+i[1]-1][1][-1]-1
             phoneme_index += i[1]
             end_offset = charoffset[end_index]["end_offset"]
-            result.append({'char' : label[i[0]],'start':start_offset,'end' :end_offset,'pitch':check_pitch_and_return(audio[start_offset*1000:end_offset*1000])})
+            result.append({'char' : label[i[0]],'start':start_offset,'end' :end_offset,'pitch':check_pitch_and_return(audio[start_offset*1000:end_offset*1000] )})
         print("infer .. Done")
         for item in infered:
             pred ="".join([predtext[j-1] for j in item[1]])

@@ -5,7 +5,6 @@ sys.path.append(os.path.dirname(os.path.abspath(current_dir)))
 def MakeLyricInfo(name,label):
     audio_path = os.path.join(current_dir,f'{name}.wav')
     result = model(audio_path, label)
-    # fix.. manually (모델 한계)
     audio = GetAudio(audio_path)
     length = len(result)
     for i , w in enumerate(result):
@@ -36,7 +35,81 @@ if __name__ == '__main__':
     from utils.Audio import GetAudio
 
     model = Model_Vocals()
-    model.initialize(3)
+    model.initialize(4)
+
+
+    name = 'Wav/아기상어_윤종신_V'
+    label = """
+    아기상어
+    뚜루루뚜루 
+    귀여운 
+    뚜루루뚜루 
+    바닷속 
+    뚜루루뚜루 
+    아기상어! 
+    엄마상어 
+    뚜루루뚜루 
+    어여쁜 
+    뚜루루뚜루 
+    바닷속 
+    뚜루루뚜루 
+    엄마상어! 
+    아빠상어 
+    뚜루루뚜루 
+    힘이 센 
+    뚜루루뚜루 
+    바닷속
+    뚜루루뚜루
+    아빠상어!
+    할머니상어
+    뚜루루뚜루
+    자상한
+    뚜루루뚜루
+    바닷속
+    뚜루루뚜루
+    할머니상어!
+    할아
+    할아버지 상어 뭐죠?
+    할아버지상어
+    뚜루루뚜루
+    멋있는
+    뚜루루뚜루
+    바닷속
+    뚜루루뚜루
+    할아버지상어!
+    우리는
+    뚜루루뚜루
+    바다의
+    뚜루루뚜루
+    사냥꾼
+    뚜루루뚜루
+    상어가족!
+    상어다
+    뚜루루뚜루
+    도망쳐
+    뚜루루뚜루
+    도망쳐
+    뚜루루뚜루
+    숨자! 으악!
+    살았다
+    뚜루루뚜루
+    살았다
+    뚜루루뚜루
+    오늘도
+    뚜루루뚜루
+    살았다! 
+    신난다
+    뚜루루뚜루
+    신난다
+    뚜루루뚜루
+    춤을 춰
+    뚜루루뚜루
+    노래 끝! 오예!
+    어 근데 약간 중독성 있는데 이노래?"""
+
+    label = label.replace('\n',' ')
+    result = MakeLyricInfo(name,label)
+
 
     name =os.path.join(current_dir,  'Wav','산중호걸_V')
     label = """
